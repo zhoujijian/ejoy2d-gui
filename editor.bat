@@ -1,0 +1,1 @@
+lua.exe editor.lua
