@@ -6,13 +6,14 @@ local shader
 local sprite
 local geometry
 local gui
+local bigmap
 
 -- =========================================
 -- ####           iup canvas            ####
 -- =========================================
 
-local VW, VH = 800, 600
-local canvas = iup.glcanvas { buffer="DOUBLE", rastersize="800x600" }
+local VW, VH = 1200, 900
+local canvas = iup.glcanvas { buffer="DOUBLE", rastersize="1200x900" }
 
 function canvas:map_cb()
     iup.GLMakeCurrent(self)
@@ -23,6 +24,7 @@ function canvas:map_cb()
     sprite = require "ejoy2d.sprite.c"
     geometry = require "ejoy2d.geometry"
     gui = require "ejoy2d.gui"
+	bigmap = require "game.bigmap"
 
     core.viewport(VW, VH)
 end
@@ -65,25 +67,24 @@ function drawarea:draw()
     core.beginframe()
     ejoy2d.clear(0xff808080)
 
+--  self:_drawcreate()
+--  self:_drawselected()
     self:_drawdialog()
-    self:_drawcreate()
-    self:_drawselected()
+	bigmap.drawframe()
 
     core.endframe()
     iup.GLSwapBuffers(canvas)
 end
 
 function drawarea:resize(w, h)
-    core.viewport(VW, VH)
+    core.viewport(w, h)
 end
 
 function drawarea:_drawdialog()
     self.dialog:draw(0, 0)
-    self.dialog.__layout:iterate(
-        function(root, x, y)
-            geometry.frame(x, y, root.style.width, root.style.height, 0xAABBCCDD, 1)            
-        end
-    )
+    self.dialog.__layout:iterate(function(root, x, y)
+        geometry.frame(x, y, root.style.width, root.style.height, 0xFFFFFFFF, 1)
+    end)
 end
 
 function drawarea:_drawcreate()
@@ -112,13 +113,3 @@ function drawarea:_drawselected()
 end
 
 return drawarea
-
---[[
-    local layout = gui.layout
-    local dialog = gui.dialog {
-        font = 15, margin = 4, size = "500x500", gap = 3, x = 10, y = 10,
-        layout.label { title="I am Jackie", size=100, x=20, y=40 },
-    }
-    guid.set(dialog)
-    dialog:root_container():dump()
-]]

@@ -7,6 +7,12 @@ local hierarchy = require "hierarchy"
 local event = require "ejoy2d.event"
 
 local gui
+local bigmap
+
+-- get iup error stack message
+function iup._TRACEBACK(errmsg)
+	print(errmsg)
+end
 
 -- ============================================
 -- #### select element from bar and create ####
@@ -26,8 +32,16 @@ function createitem:start(desc)
         desc.y = y
     end
 
+	-- button: IUP_BUTTON1(mouse left) | IUP_BUTTON2(mouse middle) | IUP_BUTTON3(mouse right)
+	-- pressed: 0 - mouse button was released;
+	--          1 - mouse button was pressed.
     area.canvas.button_cb = function(_, button, pressed, x, y, status)
-        area.create = nil
+		print("button press event")
+		if pressed == 0 and iup.isbutton1(status) then
+			bigmap.touch("END", x, y)
+		end
+	--[[
+		area.create = nil
 
         if pressed==0 then
             if iup.isbutton1(status) then
@@ -38,6 +52,7 @@ function createitem:start(desc)
             -- default process
             schedule:next(schedule.MOVED)
         end
+	]]
     end
 end
 
@@ -66,6 +81,16 @@ function moveitem:start()
         end
     end
 
+	-- button: IUP_BUTTON1(mouse left) | IUP_BUTTON2(mouse middle) | IUP_BUTTON3(mouse right)
+	-- pressed: 0 - mouse button was released;
+	--          1 - mouse button was pressed.
+    area.canvas.button_cb = function(_, button, pressed, x, y, status)
+		if pressed == 0 and iup.isbutton1(status) then
+			bigmap.touch("END", x, y)
+		end
+    end
+
+--[[	
     area.canvas.button_cb = function(_, button, pressed, x, y, status)
         hit = nil
         if pressed==1 and iup.isbutton1(status) then
@@ -76,6 +101,7 @@ function moveitem:start()
             end
         end
     end
+]]
 end
 
 function moveitem:stop()
@@ -160,6 +186,29 @@ end
 -- ######            dialog              ######
 -- ============================================
 
+local dlg = iup.dialog {
+--[[
+	iup.vbox {
+		iup.hbox {
+			iup.button { size="30x10", title="label",  action=onelement },
+			iup.button { size="30x10", title="text",   action=onelement },
+			iup.button { size="30x10", title="button", action=onelement },
+			alignment="ACENTER"
+		};
+		iup.hbox { hierarchy.tree, drawarea.canvas };
+	},
+]]
+	drawarea.canvas,
+	title="ejoy2d-editor",
+    menu=iup.menu {
+        iup.submenu { menufile, title="File" }
+    }
+}
+
+function dlg:resize_cb(w, h)
+	 drawarea:resize(w, h)
+end
+
 local function frommeta(meta)
     local C = {}
     for k,v in pairs(meta) do
@@ -189,55 +238,37 @@ local function tometa(root)
     return meta
 end
 
-local dlg = iup.dialog {
-	iup.vbox {
-		iup.hbox {
-			iup.button { size="30x10", title="label",  action=onelement },
-			iup.button { size="30x10", title="text",   action=onelement },
-			iup.button { size="30x10", title="button", action=onelement },
-			alignment="ACENTER"
-		};
-		iup.hbox { hierarchy.tree, drawarea.canvas };
-	},
-	title="ejoy2d-editor",
-    menu=iup.menu {
-        iup.submenu { menufile, title="File" }
-    }
-}
-
-function dlg:resize_cb(w, h)
-	 drawarea:resize(w, h)
-end
-
 local function main()
     dlg:show()
-
     gui = require "ejoy2d.gui"
+	bigmap = require "game.bigmap"
 
-    -- todo: 1)read meta from config;
-    --       2)construct hierarchy tree from meta.
-
-    local meta --= require "meta.lua"
+--[[
+    local meta
     meta = {
-        title="canvas", type="cbox", x=0, y=0, size="500x500", x=10, y=10, font=15,
+        -- title="canvas", type="cbox", size="400x500", x=10, y=10, font=30,
+        title="canvas", type="vbox", x=10, y=10, font=20,		
         children={
-           { type="label", title="I am Jackie", size=100, x=20, y=40 }
+            { type="button", x=30, y=40, size="100x30", font=15, title="IamJack" }
         }
     }
-    local C = frommeta(meta)
-    local dialog = gui.dialog({C})
+]]
+
+	local label  = gui.layout.label({ id=100, title="123456", size="100x30", font=20 })
+	local vbox   = gui.layout.vbox({ label, title="canvas", x=10, y=10 })
+    local dialog = gui.dialog({vbox})
     dialog.__layout:dump()
 
     drawarea:start(dialog)
-    hierarchy.start(drawarea) 
+    -- hierarchy.start(drawarea)
 
     schedule:attach(schedule.CREATE, createitem)
     schedule:attach(schedule.MOVED,  moveitem)
     schedule:start(schedule.MOVED)
-
-    if (iup.MainLoopLevel()==0) then
-        iup.MainLoop()
-    end
+	
+	assert(iup.MainLoopLevel() == 0)
+	iup.MainLoop()
+	iup.Close()
 end
 
 main()
