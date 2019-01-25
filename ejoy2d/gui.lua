@@ -64,6 +64,16 @@ function gui.mount(parent, child)
     child.parent = parent
 end
 
+function gui.unmount(node)
+	assert(node.parent)
+	for i, c in ipairs(node.parent.children) do
+		if c == node then
+			table.remove(node.parent.children, i)
+			break
+		end
+	end
+end
+
 function gui.attributes(root)
     local attribs = {}
     for k,v in pairs(root) do

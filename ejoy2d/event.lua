@@ -30,38 +30,32 @@ function event._dispatch(root, what, x, y)
     end
 end
 
-function event._test(root, dx, dy, tx, ty, check)
-    local w = root.style.width
-    local h = root.style.height
-    dx = dx+root.x
-    dy = dy+root.y
-
-    if (tx>=dx and tx<dx+w) and (ty>=dy and ty<dy+h) then
-        print(string.format("in ui area:%q-(%q,%q)(%q,%q)", root.type, dx, dy, tx, ty))
-        if root.container and root.children then
-            local children = root.children
-            for i=#children, 1, -1 do
-                local child = children[i]
-                local hit = event._test(child, dx, dy, tx, ty, check)
-                if hit then
-                    return hit
-                end
-            end
-        end
-
-        if (not check) or check(root) then
-            return root
-        end
-    end
+local function rootnode(dialog)
+	return dialog.__layout.__dialog
 end
 
-function event.test(dialog, x, y, check)
-    local root = dialog:root_container()
-    return event._test(root, 0, 0, x, y, check)
+function event.test(dialog, x, y)
+	local function test(node, parent_x, parent_y, tx, ty)
+		local x = parent_x + node.x
+		local y = parent_y + node.y
+		local w, h = node.style.width, node.style.height
+
+		if tx >= x and tx < x + w and ty >= y and ty < y + h then
+			if not node.children then
+				return node
+			end
+			for i=#node.children, 1, -1 do
+				local hit = test(node.children[i], x, y, tx, ty, check)
+				if hit then return hit end
+			end
+		end
+	end
+
+	return test(rootnode(dialog), 0, 0, x, y)
 end
 
 function event.motion(dialog, what, x, y)
-    local root = dialog:root_container()
+	local root = rootnode(dialog)
     local check = function(hit)
         -- todo: check visible and enabled
         if hit.__message then

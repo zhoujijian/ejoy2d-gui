@@ -9,8 +9,8 @@ end
 
 function widget.button(x, y, style)
 	local w, h = style.width, style.height
-	local color = 0xffe0e0e0
-	local bgcolor = 0x80808080
+	local color = 0xFFFFFFFF
+	local bgcolor = 0x80404040
 	local border = 1
 	local margin = (h - style.font) // 2
 	geo.frame(x, y, w, h, color, border)

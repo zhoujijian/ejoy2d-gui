@@ -86,7 +86,7 @@ function moveitem:start()
 	--          1 - mouse button was pressed.
     area.canvas.button_cb = function(_, button, pressed, x, y, status)
 		if pressed == 0 and iup.isbutton1(status) then
-			bigmap.touch("END", x, y)
+			bigmap.click(x, y)
 		end
     end
 
@@ -254,11 +254,18 @@ local function main()
     }
 ]]
 
-	local label  = gui.layout.label({ id=100, title="123456", size="100x30", font=20 })
-	local vbox   = gui.layout.vbox({ label, title="canvas", x=10, y=10 })
-    local dialog = gui.dialog({vbox})
-    dialog.__layout:dump()
+	local cbox = gui.layout.cbox {
+		x=0,
+		y=0,
+		font=20,
+		size="1200x900", -- see [VW, VH] in drawarea
+		title="canvas"
+	}
 
+    local dialog = gui.dialog { cbox }
+    dialog.__layout:dump()
+	bigmap.init(dialog)
+	
     drawarea:start(dialog)
     -- hierarchy.start(drawarea)
 
